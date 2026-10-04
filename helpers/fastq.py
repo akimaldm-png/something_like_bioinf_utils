@@ -58,3 +58,34 @@ def is_gc_ok(sequence: str, gc_bounds: int | float | tuple) -> bool:
     """
     lower, upper = make_bounds(gc_bounds)
     return lower <= calculate_gc_content(sequence) <= upper
+
+
+def calculate_mean_quality(quality: str) -> float:
+    """
+    Считает среднее качество рида по строке качества (шкала phred33).
+
+    Аргументы:
+    quality: str (строка качества из FASTQ)
+
+    Возвращает float среднее качество по всем нуклеотидам.
+    Для пустой строки возвращает 0.
+    """
+    if len(quality) == 0:
+        return 0.0
+    total = 0
+    for symbol in quality:
+        total = total + ord(symbol) - 33
+    return total / len(quality)
+
+
+def is_quality_ok(quality: str, quality_threshold: int | float) -> bool:
+    """
+    Проверяет, что среднее качество рида не ниже порога.
+
+    Аргументы:
+    quality: str (строка качества из FASTQ (phred33))
+    quality_threshold: int/float (пороговое значение среднего качества)
+
+    Возвращает True, если среднее качество >= порога, иначе False.
+    """
+    return calculate_mean_quality(quality) >= quality_threshold
