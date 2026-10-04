@@ -1,0 +1,11 @@
+# Example data from the course repository
+example_data/
+
+# Output of filter_fastq
+filtered/
+
+# Python cache
+__pycache__/
+
+# macOS system files
+.DS_Store
