@@ -1,4 +1,5 @@
-from typing import Iterator
+import os
+from typing import TextIO
 
 
 def make_bounds(bounds: int | float | tuple) -> tuple:
@@ -94,22 +95,20 @@ def is_quality_ok(quality: str, quality_threshold: int | float) -> bool:
     return calculate_mean_quality(quality) >= quality_threshold
 
 
-def read_fastq(input_fastq: str) -> Iterator[tuple]:
+def read_one_read(fastq_file: TextIO) -> tuple | None:
     """
-    Читает FASTQ-файл по одному риду (4 строки) и отдаёт по очереди.
-    В памяти одновременно хранится только один рид.
+    Читает один рид (4 строки) из открытого FASTQ-файла.
 
     Аргументы:
-    input_fastq: str (путь до FASTQ-файла)
+    fastq_file: TextIO (FASTQ-файл, открытый на чтение)
 
-    Возвращает генератор кортежей (заголовок, последовательность, разделитель, качество).
+    Возвращает кортеж (заголовок, последовательность, разделитель, качество)
+    или None, если файл закончился.
     """
-    with open(input_fastq, "r") as fastq_file:
-        while True:
-            header = fastq_file.readline().strip()
-            if header == "":
-                break
-            sequence = fastq_file.readline().strip()
-            separator = fastq_file.readline().strip()
-            quality = fastq_file.readline().strip()
-            yield header, sequence, separator, quality
+    header = fastq_file.readline().strip()
+    if header == "":
+        return None
+    sequence = fastq_file.readline().strip()
+    separator = fastq_file.readline().strip()
+    quality = fastq_file.readline().strip()
+    return header, sequence, separator, quality
