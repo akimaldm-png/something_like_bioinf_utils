@@ -1,3 +1,6 @@
+from typing import Iterator
+
+
 def make_bounds(bounds: int | float | tuple) -> tuple:
     """
     Приводит границы фильтра к виду (нижняя, верхняя).
@@ -89,3 +92,24 @@ def is_quality_ok(quality: str, quality_threshold: int | float) -> bool:
     Возвращает True, если среднее качество >= порога, иначе False.
     """
     return calculate_mean_quality(quality) >= quality_threshold
+
+
+def read_fastq(input_fastq: str) -> Iterator[tuple]:
+    """
+    Читает FASTQ-файл по одному риду (4 строки) и отдаёт по очереди.
+    В памяти одновременно хранится только один рид.
+
+    Аргументы:
+    input_fastq: str (путь до FASTQ-файла)
+
+    Возвращает генератор кортежей (заголовок, последовательность, разделитель, качество).
+    """
+    with open(input_fastq, "r") as fastq_file:
+        while True:
+            header = fastq_file.readline().strip()
+            if header == "":
+                break
+            sequence = fastq_file.readline().strip()
+            separator = fastq_file.readline().strip()
+            quality = fastq_file.readline().strip()
+            yield header, sequence, separator, quality
