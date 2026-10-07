@@ -112,3 +112,55 @@ def read_one_read(fastq_file: TextIO) -> tuple | None:
     separator = fastq_file.readline().strip()
     quality = fastq_file.readline().strip()
     return header, sequence, separator, quality
+
+
+def prepare_output_path(output_fastq: str) -> str:
+    """
+    Создаёт папку filtered и возвращает путь к выходному файлу в ней.
+
+    Аргументы:
+    output_fastq: str (имя выходного файла)
+
+    Возвращает str (путь вида filtered/<output_fastq>.)
+    """
+    os.makedirs("filtered", exist_ok=True)
+    return os.path.join("filtered", output_fastq)
+
+
+def write_read(output_file: TextIO, read: tuple) -> None:
+    """
+    Записывает один рид (4 строки) в открытый файл.
+
+    Аргументы:
+    output_file: TextIO (файл, открытый на запись)
+    read: tuple (заголовок, последовательность, разделитель, качество)
+
+    Ничего не возвращает.
+    """
+    for line in read:
+        output_file.write(line + "\n")
+
+
+def is_read_ok(
+    read: tuple,
+    gc_bounds: int | float | tuple,
+    length_bounds: int | float | tuple,
+    quality_threshold: int | float,
+) -> bool:
+    """
+    Проверяет, проходит ли рид все три фильтра: GC-состав, длину и качество.
+
+    Аргументы:
+    read: tuple (заголовок, последовательность, разделитель, качество)
+    gc_bounds: int/float/tuple (границы GC-состава в процентах)
+    length_bounds: int/float/tuple (границы длины)
+    quality_threshold: int/float (порог среднего качества)
+
+    Возвращает True, если рид проходит все фильтры, иначе False.
+    """
+    header, sequence, separator, quality = read
+    return (
+        is_gc_ok(sequence, gc_bounds)
+        and is_length_ok(sequence, length_bounds)
+        and is_quality_ok(quality, quality_threshold)
+    )
