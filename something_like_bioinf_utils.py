@@ -1,3 +1,4 @@
+from helpers.bio_files import make_oneline_output_path, write_fasta_record
 from helpers.fastq import (
     is_read_ok,
     prepare_output_path,
@@ -38,3 +39,38 @@ def filter_fastq(
                 break
             if is_read_ok(read, gc_bounds, length_bounds, quality_threshold):
                 write_read(output_file, read)
+
+
+def convert_multiline_fasta_to_oneline(
+    input_fasta: str,
+    output_fasta: str | None = None,
+) -> None:
+    """
+    Переводит FASTA-файл, в котором последовательности разбиты на несколько строк,
+    в формат, где каждая последовательность записана одной строкой.
+    Файл обрабатывается построчно, в памяти хранится одна запись.
+
+    Аргументы:
+    input_fasta: str (путь до входного FASTA-файла)
+    output_fasta: str | None (путь до выходного файла, если не указан,
+        файл сохраняется рядом со входным с _oneline)
+
+    Ничего не возвращает.
+    """
+    if output_fasta is None:
+        output_fasta = make_oneline_output_path(input_fasta)
+
+    with open(input_fasta, "r") as input_file, open(output_fasta, "w") as output_file:
+        header = None
+        sequence = ""
+        for line in input_file:
+            line = line.strip()
+            if line.startswith(">"):
+                if header is not None:
+                    write_fasta_record(output_file, header, sequence)
+                header = line
+                sequence = ""
+            else:
+                sequence = sequence + line
+        if header is not None:
+            write_fasta_record(output_file, header, sequence)
