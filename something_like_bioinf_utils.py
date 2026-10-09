@@ -1,4 +1,12 @@
-from helpers.bio_files import make_oneline_output_path, write_fasta_record
+from helpers.bio_files import (
+    extract_description,
+    get_description_end,
+    make_oneline_output_path, 
+    write_fasta_record,
+    write_lines,
+)
+
+
 from helpers.fastq import (
     is_read_ok,
     prepare_output_path,
@@ -74,3 +82,28 @@ def convert_multiline_fasta_to_oneline(
                 sequence = sequence + line
         if header is not None:
             write_fasta_record(output_file, header, sequence)
+
+
+def parse_blast_output(input_file: str, output_file: str) -> None:
+    """
+    Читает текстовый отчёт BLAST и для каждого запроса (Query) берёт описание
+    лучшего совпадения - первую строку столбца Description.
+    Уникальные описания сохраняет в файл, по одному на строку,
+    отсортированными по алфавиту.
+
+    Аргументы:
+    input_file: str (путь до txt-файла с результатами BLAST)
+    output_file: str (путь до выходного файла)
+
+    Ничего не возвращает.
+    """
+    descriptions = set()
+    with open(input_file, "r") as blast_file:
+        for line in blast_file:
+            if line.startswith("Sequences producing significant alignments:"):
+                columns_line = blast_file.readline()
+                blast_file.readline()
+                first_hit_line = blast_file.readline()
+                description_end = get_description_end(columns_line)
+                descriptions.add(extract_description(first_hit_line, description_end))
+    write_lines(output_file, sorted(descriptions, key=str.lower))
